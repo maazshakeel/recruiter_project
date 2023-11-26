@@ -1,5 +1,6 @@
 // Create a type for product
 interface Product {
+  id?: number;
   nama: string;
   deskripsi: string;
   harga: number;
