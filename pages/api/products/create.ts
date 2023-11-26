@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import path from "path";
-import Product from "@/types/custom";
+import { Product } from "@/types/custom";
 import { moveFile } from "@/utils/moveFile";
 import { createDirectory } from "@/utils/createDirectory";
 import { parseFormData } from "@/utils/parseFormData";
-import { getLastProductId, insertProduct } from "@/services/create.service";
+import { getLastProductId, insertProduct } from "@/services/crud.service";
 
 export const config = {
   api: {
@@ -24,9 +24,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     if (files?.length) {
       const targetPath = path.join(process.cwd(), `public/uploads/products/`);
-      const n = `${newProductId.toString()}.${
-        files[0][1].originalFilename.split(".")[1]
-      }`;
+      const n = `${newProductId.toString()}.${files[0][1]?.originalFilename?.split(
+        "."
+      )[1]}`;
       await createDirectory(targetPath);
 
       for (const file of files) {
@@ -40,9 +40,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         await moveFile(tempPath, targetFilePath);
       }
 
-      const file_user = `uploads/products/${newProductId.toString()}.${
-        files[0][1].originalFilename.split(".")[1]
-      }`;
+      const file_user = `uploads/products/${newProductId.toString()}.${files[0][1]?.originalFilename?.split(
+        "."
+      )[1]}`;
       inputData["path"] = file_user;
 
       await insertProduct(inputData);

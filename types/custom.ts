@@ -1,3 +1,5 @@
+import { NextApiRequest } from "next";
+
 // Create a type for product
 interface Product {
   id?: number;
@@ -9,4 +11,10 @@ interface Product {
   suplier_id: number;
 }
 
-export default Product;
+interface CustomNextApiRequest extends NextApiRequest {
+  query: {
+    id: string;
+  };
+}
+
+export type { Product, CustomNextApiRequest };

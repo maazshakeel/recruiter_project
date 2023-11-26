@@ -6,7 +6,7 @@ import { promises as fs } from "fs";
 
 export default async function deleteProduct(
   req: NextApiRequest,
-  res: NextApiResponse,
+  res: NextApiResponse
 ) {
   if (req.method === "DELETE") {
     const productId = req.query.id;
@@ -46,12 +46,12 @@ export default async function deleteProduct(
             return res
               .status(200)
               .json({ message: "Product and image deleted successfully" });
-          } catch (error) {
+          } catch (error: any) {
             console.error("Error deleting image:", error.message);
             return res.status(500).json({ error: "Failed to delete image" });
           }
         });
-      },
+      }
     );
   } else {
     return res.status(404).json({ status: "Wrong method!" });
