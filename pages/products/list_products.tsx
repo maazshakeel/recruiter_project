@@ -1,4 +1,5 @@
 import Product from "@/types/custom";
+import path from "path";
 import React, { useState, useEffect, ChangeEvent } from "react";
 
 const API_URL = "http://localhost:3000";
@@ -28,7 +29,6 @@ const ProductForm: React.FC = () => {
   };
 
   const handleCreate = () => {
-    // Basic validation
     if (
       !product.nama ||
       !product.deskripsi ||
@@ -41,19 +41,42 @@ const ProductForm: React.FC = () => {
       return;
     }
 
+    // Check file size
+    if (product.foto.size > 2 * 1024 * 1024) {
+      alert("File size should be less than 2 MB.");
+      return;
+    }
+
+    // Check file extension
+    const allowedExtensions = ["png", "jpg", "jpeg"];
+    const fileExtension = product.foto.name.split(".").pop().toLowerCase();
+    if (!allowedExtensions.includes(fileExtension)) {
+      alert("Allowed file extensions: .png, .jpg, .jpeg");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("nama", product.nama);
+    formData.append("deskripsi", product.deskripsi);
+    formData.append("harga", product.harga.toString());
+    formData.append("stok", product.stok.toString());
+    formData.append("foto", product.foto);
+    formData.append("suplier_id", product.suplier_id.toString());
+
     fetch(`${API_URL}/api/products/create`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(product),
+      body: formData,
     })
       .then((response) => response.json())
       .then(() => {
         // Refresh the product list after creating a new product
         fetchProductList();
+      })
+      .catch((error) => {
+        console.error("Error creating product:", error.message);
       });
   };
+
   const fetchProductList = () => {
     setLoading(true);
     fetch(`${API_URL}/api/products/read`)
@@ -61,6 +84,9 @@ const ProductForm: React.FC = () => {
       .then((data) => {
         setProducts(data);
         setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching product list:", error.message);
       });
   };
 
@@ -78,6 +104,9 @@ const ProductForm: React.FC = () => {
         .then(() => {
           // Refresh the product list after updating a product
           fetchProductList();
+        })
+        .catch((error) => {
+          console.error("Error updating product:", error.message);
         });
     }
   };
@@ -90,7 +119,15 @@ const ProductForm: React.FC = () => {
       .then(() => {
         // Refresh the product list after deleting a product
         fetchProductList();
+      })
+      .catch((error) => {
+        console.error("Error deleting product:", error.message);
       });
+  };
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files ? e.target.files[0] : null;
+    setProduct((prevProduct) => ({ ...prevProduct, foto: file }));
   };
 
   return (
@@ -148,16 +185,15 @@ const ProductForm: React.FC = () => {
             onChange={handleChange}
             style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
           />
-          <label style={{ display: "block", marginBottom: "5px" }}>
-            Image URL:
+          <label>
+            Image:
+            <input
+              type="file"
+              accept="image/*"
+              name="foto"
+              onChange={handleFileChange}
+            />
           </label>
-          <input
-            type="text"
-            name="foto"
-            value={product.foto}
-            onChange={handleChange}
-            style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-          />
           <label style={{ display: "block", marginBottom: "5px" }}>
             Supplier ID:
           </label>
@@ -183,7 +219,7 @@ const ProductForm: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => handleUpdate(product.id)}
+            onClick={handleUpdate}
             style={{
               backgroundColor: "#008CBA",
               color: "white",
@@ -205,24 +241,43 @@ const ProductForm: React.FC = () => {
           <p>Loading...</p>
         ) : (
           <ul>
-            {products.map((p: Product) => (
-              <li key={p.id} style={{ marginBottom: "10px" }}>
-                {p.nama} - {p.harga} - {p.stok}
-                <button
-                  onClick={() => handleDelete(p.id)}
-                  style={{
-                    backgroundColor: "#f44336",
-                    color: "white",
-                    padding: "5px",
-                    border: "none",
-                    cursor: "pointer",
-                    marginLeft: "10px",
-                  }}
-                >
-                  Delete
-                </button>
-              </li>
-            ))}
+            {products.length !== 0 &&
+              products.map((p: Product) => (
+                <li key={p.id} style={{ marginBottom: "10px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "start",
+                      columnGap: "5px",
+                    }}
+                  >
+                    <strong>Image:</strong> <p>{p.foto}</p>
+                    <img
+                      src={`http://localhost:3000/${p.foto}`}
+                      alt={p.nama}
+                      style={{ maxWidth: "100px", maxHeight: "100px" }}
+                    />
+                    <strong>Nama:</strong> {p.nama}
+                    <strong>Harga:</strong> {p.harga}
+                    <strong>Stok:</strong> {p.stok}
+                    <button
+                      onClick={() => handleDelete(p.id)}
+                      style={{
+                        backgroundColor: "#f44336",
+                        color: "white",
+                        padding: "5px",
+                        border: "none",
+                        cursor: "pointer",
+                        marginLeft: "10px",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            {products.length === 0 && <p>Add data, please!</p>}
           </ul>
         )}
       </div>
