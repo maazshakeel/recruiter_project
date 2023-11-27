@@ -13,6 +13,13 @@ export async function getLastProductId() {
   });
 }
 
+export const insertSuplier = async (inputData: any) => {
+  db.run("INSERT INTO suplier (nama_suplier, alamat, email) VALUES (?, ?, ?)", [
+    inputData.nama,
+    inputData.alamat,
+    inputData.email,
+  ]);
+};
 export const insertProduct = async (inputData: Product | any) => {
   db.run(
     "INSERT INTO produk (nama, deskripsi, harga, stok, foto, suplier_id) VALUES (?, ?, ?, ?, ?, ?)",

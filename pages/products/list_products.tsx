@@ -1,11 +1,10 @@
-import Product from "@/types/custom";
-import path from "path";
+import { Product } from "@/types/custom";
 import React, { useState, useEffect, ChangeEvent } from "react";
 
 const API_URL = "http://localhost:3000";
 
 const ProductForm: React.FC = () => {
-  const [product, setProduct] = useState<Product>({
+  const [product, setProduct] = useState<Product | any>({
     id: 0,
     nama: "",
     deskripsi: "",
@@ -13,10 +12,16 @@ const ProductForm: React.FC = () => {
     stok: 0,
     foto: "",
     suplier_id: 0,
+    suplier: 0,
   });
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [supliers, setSupliers] = useState([]);
+  const [suplier, setSuplier] = useState();
+  const [nama, setNama] = useState();
+  const [alamat, setAlamat] = useState();
+  const [email, setEmail] = useState();
 
   useEffect(() => {
     // Fetch product list when the component mounts
@@ -77,38 +82,74 @@ const ProductForm: React.FC = () => {
       });
   };
 
-  const fetchProductList = () => {
-    setLoading(true);
-    fetch(`${API_URL}/api/products/read`)
-      .then((response) => response.json())
-      .then((data) => {
-        setProducts(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching product list:", error.message);
-      });
-  };
-
   const handleUpdate = () => {
     const productId = window.prompt("Enter the product ID for update:");
     if (productId) {
-      fetch(`${API_URL}/api/products/update?id=${parseInt(productId)}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(product),
+      // Check file size
+      if (product.foto.size > 2 * 1024 * 1024) {
+        alert("File size should be less than 2 MB.");
+        return;
+      }
+
+      // Check file extension
+      const allowedExtensions = ["png", "jpg", "jpeg"];
+      const fileExtension = product.foto.name.split(".").pop().toLowerCase();
+      if (!allowedExtensions.includes(fileExtension)) {
+        alert("Allowed file extensions: .png, .jpg, .jpeg");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("nama", product.nama);
+      formData.append("deskripsi", product.deskripsi);
+      formData.append("harga", product.harga.toString());
+      formData.append("stok", product.stok.toString());
+      formData.append("foto", product.foto);
+      formData.append("suplier_id", product.suplier_id.toString());
+
+      fetch(`${API_URL}/api/products/update?id=${productId}`, {
+        method: "POST",
+        body: formData,
       })
         .then((response) => response.json())
         .then(() => {
           // Refresh the product list after updating a product
           fetchProductList();
+          setProduct({
+            id: 0,
+            nama: "",
+            deskripsi: "",
+            harga: 0,
+            stok: 0,
+            foto: "",
+            suplier_id: 0,
+          });
+          window.location.reload();
         })
         .catch((error) => {
           console.error("Error updating product:", error.message);
         });
+    } else {
+      alert("Invalid!");
     }
+  };
+
+  const fetchProductList = () => {
+    setLoading(true);
+    fetch(`${API_URL}/api/products/read`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setProducts(data[0]);
+        setSupliers(data[1]);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching product list:", error.message);
+      });
   };
 
   const handleDelete = (id: number) => {
@@ -127,7 +168,39 @@ const ProductForm: React.FC = () => {
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files ? e.target.files[0] : null;
-    setProduct((prevProduct) => ({ ...prevProduct, foto: file }));
+    setProduct((prevProduct: Product | any) => ({
+      ...prevProduct,
+      foto: file,
+    }));
+  };
+
+  const handleSuplierCreate = () => {
+    if (!nama || !email || !alamat) {
+      alert("Empty");
+      return;
+    }
+    fetch(`${API_URL}/api/products/suplier`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        nama,
+        alamat,
+        email,
+      }),
+    })
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        fetchProductList();
+        alert("Created!");
+      })
+      .catch((error) => {
+        console.error("Error:", error.message);
+        alert(error.message);
+      });
   };
 
   return (
@@ -194,16 +267,30 @@ const ProductForm: React.FC = () => {
               onChange={handleFileChange}
             />
           </label>
-          <label style={{ display: "block", marginBottom: "5px" }}>
-            Supplier ID:
-          </label>
-          <input
-            type="number"
-            name="suplier_id"
-            value={product.suplier_id}
-            onChange={handleChange}
-            style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-          />
+
+          <p>{suplier}</p>
+          {supliers.length !== 0 && (
+            <>
+              <label style={{ display: "block", marginBottom: "5px" }}>
+                Supplier ID:
+              </label>
+              <select
+                name="suplier_id"
+                value={product.suplier_id}
+                onChange={(e) => setSuplier(e.target.value)}
+                style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+              >
+                <option value="">Select Supplier</option>
+                {supliers.map((index, supplier) => (
+                  <option key={supplier} value={supplier + 1}>
+                    {supplier + 1}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
+
+          {supliers.length === 0 && <p>No supliers</p>}
           <button
             type="button"
             onClick={handleCreate}
@@ -232,6 +319,51 @@ const ProductForm: React.FC = () => {
             Update Product
           </button>
         </form>
+        <h2>Create Suplier</h2>
+
+        <form style={{ marginBottom: "20px" }}>
+          <label style={{ display: "block", marginBottom: "5px" }}>Name:</label>
+          <input
+            type="text"
+            name="nama"
+            value={nama}
+            onChange={(e) => setNama(e.target.value)}
+            style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+          />
+          <label style={{ display: "block", marginBottom: "5px" }}>
+            Alamat:
+          </label>
+          <input
+            type="text"
+            name="alamat"
+            value={alamat}
+            onChange={(e) => setAlamat(e.target.value)}
+            style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+          />
+          <label style={{ display: "block", marginBottom: "5px" }}>
+            Email:
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+          />
+          <button
+            type="button"
+            onClick={handleSuplierCreate}
+            style={{
+              backgroundColor: "#4CAF50",
+              color: "white",
+              padding: "10px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Create Suplier
+          </button>
+        </form>
       </div>
 
       {/* Product list column */}
@@ -242,7 +374,7 @@ const ProductForm: React.FC = () => {
         ) : (
           <ul>
             {products.length !== 0 &&
-              products.map((p: Product) => (
+              products.map((p: Product | any) => (
                 <li key={p.id} style={{ marginBottom: "10px" }}>
                   <div
                     style={{
@@ -252,7 +384,7 @@ const ProductForm: React.FC = () => {
                       columnGap: "5px",
                     }}
                   >
-                    <strong>Image:</strong> <p>{p.foto}</p>
+                    <strong>Image:</strong>
                     <img
                       src={`http://localhost:3000/${p.foto}`}
                       alt={p.nama}
