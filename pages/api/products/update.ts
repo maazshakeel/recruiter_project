@@ -6,6 +6,7 @@ import { createDirectory } from "@/utils/createDirectory";
 import { parseFormData } from "@/utils/parseFormData";
 import { updateProduct } from "@/services/crud.service";
 import db from "@/lib/db";
+import { deleteFile } from "@/utils/deleteFile";
 
 export const config = {
   api: {
@@ -28,6 +29,14 @@ const handler = async (req: CustomNextApiRequest, res: NextApiResponse) => {
 
       try {
         const files = await parseFormData(req, inputData);
+        console.log(path.join(process.cwd(), `public/${rows.foto}`));
+        console.log(
+          "=================================== DELETE EXISTING FILE ================================="
+        );
+        deleteFile(path.join(process.cwd(), `public/${rows.foto}`));
+        console.log(
+          "=================================== DELETE EXISTING FILE ================================="
+        );
 
         if (files?.length) {
           const targetPath = path.join(

@@ -18,10 +18,10 @@ const ProductForm: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [supliers, setSupliers] = useState([]);
-  const [suplier, setSuplier] = useState();
-  const [nama, setNama] = useState();
-  const [alamat, setAlamat] = useState();
-  const [email, setEmail] = useState();
+  const [suplier, setSuplier] = useState<string>();
+  const [nama, setNama] = useState<string>();
+  const [alamat, setAlamat] = useState<string>();
+  const [email, setEmail] = useState<string>();
 
   useEffect(() => {
     // Fetch product list when the component mounts
@@ -40,7 +40,7 @@ const ProductForm: React.FC = () => {
       product.harga <= 0 ||
       product.stok <= 0 ||
       !product.foto ||
-      product.suplier_id <= 0
+      suplier <= 0
     ) {
       alert("Please fill in all fields before creating the product.");
       return;
@@ -66,7 +66,7 @@ const ProductForm: React.FC = () => {
     formData.append("harga", product.harga.toString());
     formData.append("stok", product.stok.toString());
     formData.append("foto", product.foto);
-    formData.append("suplier_id", product.suplier_id.toString());
+    formData.append("suplier_id", suplier.toString());
 
     fetch(`${API_URL}/api/products/create`, {
       method: "POST",
@@ -268,25 +268,52 @@ const ProductForm: React.FC = () => {
             />
           </label>
 
-          <p>{suplier}</p>
+          <br />
+          <br />
+
           {supliers.length !== 0 && (
             <>
               <label style={{ display: "block", marginBottom: "5px" }}>
-                Supplier ID:
+                Supplier ID: {suplier}
               </label>
-              <select
-                name="suplier_id"
-                value={product.suplier_id}
-                onChange={(e) => setSuplier(e.target.value)}
-                style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-              >
-                <option value="">Select Supplier</option>
-                {supliers.map((index, supplier) => (
-                  <option key={supplier} value={supplier + 1}>
-                    {supplier + 1}
-                  </option>
-                ))}
-              </select>
+              {!loading && (
+                <select
+                  name="suplier_id"
+                  value={product.suplier_id}
+                  onChange={(e) => setSuplier(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  <option value="">Select Supplier</option>
+                  {supliers.map((j) => (
+                    <option key={j.id_suplier} value={j.id_suplier}>
+                      {j.id_suplier}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {/* {!loading && (
+                <select
+                  name="suplier_id"
+                  value={product.suplier_id}
+                  onChange={(e) => setSuplier(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  <option value="">Select Supplier</option>
+                  {supliers.map((index, ddd) => (
+                    <option key={ddd.id_suplier} value={ddd.id_suplier}>
+                      {ddd.id_suplier}
+                    </option>
+                  ))}
+                </select>
+              )} */}
             </>
           )}
 
@@ -384,6 +411,7 @@ const ProductForm: React.FC = () => {
                       columnGap: "5px",
                     }}
                   >
+                    <p>{p.id}</p>
                     <strong>Image:</strong>
                     <img
                       src={`http://localhost:3000/${p.foto}`}

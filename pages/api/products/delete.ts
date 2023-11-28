@@ -3,6 +3,7 @@ import db from "@/lib/db";
 import { NextApiRequest, NextApiResponse } from "next";
 import path from "path";
 import { promises as fs } from "fs";
+import { deleteFile } from "@/utils/deleteFile";
 
 export default async function deleteProduct(
   req: NextApiRequest,
@@ -41,15 +42,8 @@ export default async function deleteProduct(
           // Delete the associated image
           console.log(imagePath);
           const fullPath = path.join(process.cwd(), `public/${imagePath}`);
-          try {
-            await fs.unlink(fullPath);
-            return res
-              .status(200)
-              .json({ message: "Product and image deleted successfully" });
-          } catch (error: any) {
-            console.error("Error deleting image:", error.message);
-            return res.status(500).json({ error: "Failed to delete image" });
-          }
+          console.log(fullPath);
+          deleteFile(fullPath);
         });
       }
     );
