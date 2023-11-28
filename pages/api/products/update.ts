@@ -22,14 +22,13 @@ const handler = async (req: CustomNextApiRequest, res: NextApiResponse) => {
   db.get(
     "SELECT * FROM produk WHERE id = ?",
     [req.query.id],
-    async (err, rows) => {
+    async (err, rows: Product) => {
       if (rows === undefined) {
         return res.status(404).send("NOt found!");
       }
 
       try {
         const files = await parseFormData(req, inputData);
-        console.log(path.join(process.cwd(), `public/${rows.foto}`));
         console.log(
           "=================================== DELETE EXISTING FILE ================================="
         );

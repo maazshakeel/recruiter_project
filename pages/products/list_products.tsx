@@ -18,7 +18,7 @@ const ProductForm: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [supliers, setSupliers] = useState([]);
-  const [suplier, setSuplier] = useState<string>();
+  const [suplier, setSuplier] = useState<string>("1");
   const [nama, setNama] = useState<string>();
   const [alamat, setAlamat] = useState<string>();
   const [email, setEmail] = useState<string>();
@@ -40,7 +40,7 @@ const ProductForm: React.FC = () => {
       product.harga <= 0 ||
       product.stok <= 0 ||
       !product.foto ||
-      suplier <= 0
+      parseInt(suplier) <= 0
     ) {
       alert("Please fill in all fields before creating the product.");
       return;
@@ -288,7 +288,7 @@ const ProductForm: React.FC = () => {
                   }}
                 >
                   <option value="">Select Supplier</option>
-                  {supliers.map((j) => (
+                  {supliers.map((j: any) => (
                     <option key={j.id_suplier} value={j.id_suplier}>
                       {j.id_suplier}
                     </option>
